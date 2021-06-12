@@ -1,0 +1,13 @@
+{
+  "name": "polarfox-presale",
+  "version": "0.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "compile": "waffle .waffle.json"
+  },
+  "devDependencies": {
+    "ethereum-waffle": "^3.3.0",
+    "solc": "^0.8.5"
+  }
+}
