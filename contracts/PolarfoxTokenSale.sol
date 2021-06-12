@@ -15,8 +15,8 @@ struct TransactionData {
 
 contract PolarfoxTokenSale {
     // Constants
-    uint256 public constant price = 1; // The price, in wei, per PFX // TODO
-    uint256 public constant maximumAmount = 1; // The maximum amount of PFX that can be bought // TODO
+    uint256 public constant price = 41840000000000; // The price, in wei, per PFX // TODO
+    uint256 public constant maximumAmount = 10000; // The maximum amount of PFX that can be bought // TODO
     address owner; // The owner of the contract
     address payable sellRecipient; // The address that receives the payments
 
@@ -45,7 +45,8 @@ contract PolarfoxTokenSale {
     // Number of tokens: number of PFX to buy
     // Recipient: the AVAX address to which the PFX tokens should be sent to
     function buyTokens(uint256 numberOfTokens, address recipient) public payable {
-        // Safety checks 
+        // Safety checks
+        require(tokensToSell > 0, 'Sale finished');
         require(numberOfTokens > 0, 'Cannot buy 0 PFX tokens');
         require(msg.value == safeMultiply(numberOfTokens, price), 'The amount of ETH sent does not match the desired amount of PFX');
         require(numberOfTokens <= tokensToSell - tokensSold, 'Not enough PFX to sell');
