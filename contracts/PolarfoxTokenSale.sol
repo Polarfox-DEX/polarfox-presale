@@ -15,19 +15,18 @@ struct TransactionData {
 
 contract PolarfoxTokenSale {
     // Constants
-    uint256 public constant price = 41840000000000; // The price, in wei, per PFX // TODO
-    uint256 public constant maximumAmount = 10000; // The maximum amount of PFX that can be bought // TODO
-    uint256 public constant minimumAkitaBalance = 100000000; // The minimum AKITA balance required to access the presale // TODO
+    uint256 public constant maximumAmount = 1000000000000000000; // The maximum amount of ETH that can be sent (in wei) (1 ETH)
+    uint256 public constant minimumAkitaBalance = 100000000; // The minimum AKITA balance required to access the presale (100M AKITA)
     address owner; // The owner of the contract
     IERC20Token public akita; // The AKITA token contract
     address payable sellRecipient; // The address that receives the payments
 
     // Variables
-    uint256 public tokensSold;
-    uint256 public tokensToSell = 9250000; // Total amount of tokens to sell // TODO
     address[] public buyers;
+    uint32 public numberOfBuyers;
     mapping(address => bool) public hasBought;
     mapping(address => TransactionData) public transactions;
+    bool public isSellActive;
 
     // Events
     event Sold(address buyer, uint256 amount);
@@ -36,29 +35,26 @@ contract PolarfoxTokenSale {
         owner = msg.sender;
         sellRecipient = sellRecipient_;
         akita = akita_;
+        numberOfBuyers = 0;
+        isSellActive = false;
+    }
+
+    function buyTokens() public payable {
+        buyTokens(msg.sender);
     }
 
     // Parameters:
-    // Number of tokens: number of PFX to buy 
-    function buyTokens(uint256 numberOfTokens) public payable {
-        buyTokens(numberOfTokens, msg.sender);
-    }
-
-    // Parameters:
-    // Number of tokens: number of PFX to buy
     // Recipient: the AVAX address to which the PFX tokens should be sent to
-    function buyTokens(uint256 numberOfTokens, address recipient) public payable {
+    function buyTokens(address recipient) public payable {
         // Safety checks
-        require(tokensToSell > 0, 'Sale finished');
-        require(numberOfTokens > 0, 'Cannot buy 0 PFX tokens');
-        require(msg.value == safeMultiply(numberOfTokens, price), 'The amount of ETH sent does not match the desired amount of PFX');
-        require(numberOfTokens <= tokensToSell - tokensSold, 'Not enough PFX to sell');
-        require(numberOfTokens <= maximumAmount, 'Cannot buy more PFX than the limit allows');
+        require(isSellActive, 'Sale has not started or is finished');
+        require(msg.value > 0, 'Cannot buy 0 PFX tokens');
+        require(msg.value <= maximumAmount, 'Cannot buy more PFX than the limit allows');
         require(akita.balanceOf(msg.sender) >= safeMultiply(minimumAkitaBalance, 10 ** akita.decimals()), 'The sender does not have enough AKITA');
         
         // This address has already bought PFX before: Make sure they do not buy more than the limit
         if(hasBought[msg.sender]) {
-            uint256 newAmount = transactions[msg.sender].boughtAmount + numberOfTokens;
+            uint256 newAmount = transactions[msg.sender].boughtAmount + msg.value;
 
             require(
                 newAmount <= maximumAmount,
@@ -72,15 +68,13 @@ contract PolarfoxTokenSale {
         else {
             // Store the transaction
             buyers.push(msg.sender);
+            numberOfBuyers++;
             hasBought[msg.sender] = true;
-            transactions[msg.sender] = TransactionData(numberOfTokens, block.timestamp, recipient);
+            transactions[msg.sender] = TransactionData(msg.value, block.timestamp, recipient);
         }
 
-        // Update public data
-        tokensSold += numberOfTokens;
-
         // Event
-        emit Sold(msg.sender, numberOfTokens);
+        emit Sold(msg.sender, msg.value);
     }
 
     function collectSale() public {
@@ -89,11 +83,18 @@ contract PolarfoxTokenSale {
         sellRecipient.transfer(address(this).balance);
     }
 
+    function startSale() public {
+        require(msg.sender == owner, 'Sender is not owner');
+
+        // Start the sale
+        isSellActive = true;
+    }
+
     function endSale() public {
         require(msg.sender == owner, 'Sender is not owner');
 
         // Stop the sale
-        tokensToSell = 0;
+        isSellActive = false;
     }
 
     // Guards against integer overflows
@@ -107,4 +108,3 @@ contract PolarfoxTokenSale {
         }
     }
 }
-
