@@ -17,65 +17,79 @@ struct TransactionData {
     address receivingAddress;
 }
 
+/**
+ * Introductory comment goes here 🦊
+ */
 contract PolarfoxTokenSale is Ownable {
-    // Constants
-    address owner; // The owner of the contract
-    address payable sellRecipient; // The address that receives the payments
+    /// @notice The address that receives the money from the sale
+    address payable sellRecipient;
 
-    // Variables
+    /// @notice The addresses that participated in the presale
     address[] public buyers;
+
+    /// @notice True if an address has bought tokens in the presale, false otherwise
     mapping(address => bool) hasBought;
+
+    /// @notice The list of transactions that occurred on the sale
     TransactionData[] public transactions;
+
+    /// @notice True if the sell is active, false otherwise
     bool public isSellActive;
 
-    // Events
-    event Sold(address buyer, uint256 amount);
+    /// @notice An event that is emmitted when some tokens are bought
+    event Sold(uint256 boughtAmount, uint256 dateBought, address buyingAddress, address receivingAddress);
 
     constructor(address payable sellRecipient_) {
-        owner = msg.sender;
         sellRecipient = sellRecipient_;
         isSellActive = false;
     }
 
+    // Returns the number of buyers participating in the presale
     function numberOfBuyers() public view returns (uint256) {
         return buyers.length;
     }
 
+    // Buys tokens in the presale - msg.sender receives the tokens
     function buyTokens() public payable {
         buyTokens(msg.sender);
     }
 
-    // Parameters:
-    // Recipient: the AVAX address to which the PFX tokens should be sent to
+    // Buys tokens in the presale - recipient receives the tokens
     function buyTokens(address recipient) public payable {
         // Safety checks
         require(isSellActive, 'Sale has not started or is finished');
         require(msg.value > 0, 'Cannot buy 0 PFX tokens');
 
-        // Store the transaction
+        // Add the buyer to the list of buyers if needed
         if (!hasBought[recipient]) {
             buyers.push(recipient);
             hasBought[recipient] = true;
         }
 
+        // Append the transaction to the list of transactions
         transactions.push(TransactionData(msg.value, block.timestamp, msg.sender, recipient));
 
-        // Event
-        emit Sold(msg.sender, msg.value);
+        emit Sold(msg.value, block.timestamp, msg.sender, recipient);
     }
 
+    // Collects the sale funds. Only callable by the owner
     function collectSale() public onlyOwner {
-        // Collect the sale funds
         sellRecipient.transfer(address(this).balance);
+
+        // TODO: Add event
     }
 
+    // Starts the sale. Only callable by the owner
     function startSale() public onlyOwner {
-        // Start the sale
         isSellActive = true;
+
+        // TODO: Add event
     }
 
+    // Stops the sale. Only callable by the owner
     function endSale() public onlyOwner {
-        // Stop the sale
         isSellActive = false;
+
+        // TODO: Add event
     }
 }
