@@ -2,11 +2,6 @@
 pragma solidity 0.8.7;
 
 // To do list
-// #1: Remove the AKITA threshold - OK
-// #2: Introduce the level system - OK
-// #3: USDT / BNB - OK
-// #5: Add more events - OK
-// #5: Add proper comments, including an introductory comment
 // #6: Gas fees optimizations - some uint256s can be reduced to uint96s
 
 // PancakePair BNB/USDT on mainnet: 0x16b9a82891338f9bA80E2D6970FddA79D1eb0daE
@@ -20,11 +15,21 @@ struct TransactionData {
     uint256 dateBought;
     address buyingAddress;
     address receivingAddress;
+    address referredAddress;
     uint8 level;
 }
 
 /**
- * Introductory comment goes here 🦊
+ * The Polarfox token sale 🦊
+ * 10,000,000 PFX will be offerred for sale before launch, 9,000,000 of which will be sold through
+ * this contract.
+ *
+ * The sale works as follows:
+ * The 9,000,000 PFX are distributed among 120 batches. The earlier batches have a lower price and a
+ * lower size. Whenever a batch is completed, the presale moves on to the next batch.
+ *
+ * The sale also supports referrals - you can refer a friend to the presale, and earn a 25% bonus on
+ * the amount of PFX they bought.
  */
 contract PolarfoxTokenSale is Ownable {
     /// @notice The address that receives the money from the sale
@@ -38,6 +43,12 @@ contract PolarfoxTokenSale is Ownable {
 
     /// @notice The list of transactions that occurred on the sale
     TransactionData[] public transactions;
+
+    /// @notice Returns the transactions for each receiving address
+    mapping(address => TransactionData[]) public transactionsForReceivingAddress;
+
+    /// @notice Returns the transactions for each referred address
+    mapping(address => TransactionData[]) public transactionsForReferralAddress;
 
     /// @notice True if the sell is active, false otherwise
     bool public isSellActive;
@@ -84,11 +95,39 @@ contract PolarfoxTokenSale is Ownable {
         2850000000000000000000000, 2925000000000000000000000, 3000000000000000000000000, 3075000000000000000000000, 3150000000000000000000000 // Levels 115 to 119
     ];
 
+    // Test values:
+    // uint256[numberOfLevels] public batchSizes = [
+    //     1000, 100, 200, 300, 400, // Levels 00 to 04
+    //     1000, 100, 200, 300, 400, // Levels 05 to 09
+    //     1000, 100, 200, 300, 400, // Levels 10 to 14
+    //     1000, 100, 200, 300, 400, // Levels 15 to 19
+    //     1000, 100, 200, 300, 400, // Levels 20 to 24
+    //     1000, 100, 200, 300, 400, // Levels 25 to 29
+    //     1000, 100, 200, 300, 400, // Levels 30 to 34
+    //     1000, 100, 200, 300, 400, // Levels 35 to 39
+    //     1000, 100, 200, 300, 400, // Levels 40 to 44
+    //     1000, 100, 200, 300, 400, // Levels 45 to 49
+    //     1000, 100, 200, 300, 400, // Levels 50 to 54
+    //     1000, 100, 200, 300, 400, // Levels 55 to 59
+    //     1000, 100, 200, 300, 400, // Levels 60 to 64
+    //     1000, 100, 200, 300, 400, // Levels 65 to 69
+    //     1000, 100, 200, 300, 400, // Levels 70 to 74
+    //     1000, 100, 200, 300, 400, // Levels 75 to 79
+    //     1000, 100, 200, 300, 400, // Levels 80 to 84
+    //     1000, 100, 200, 300, 400, // Levels 85 to 89
+    //     1000, 100, 200, 300, 400, // Levels 90 to 94
+    //     1000, 100, 200, 300, 400, // Levels 95 to 99
+    //     1000, 100, 200, 300, 400, // Levels 100 to 104
+    //     1000, 100, 200, 300, 400, // Levels 105 to 109
+    //     1000, 100, 200, 300, 400, // Levels 110 to 114
+    //     1000, 100, 200, 300, 400 // Levels 115 to 119
+    // ];
+
     /// @notice Address of the PancakeSwap BNB/USDT pair. Used to calculate the current BNB price
     IPancakePair public pancakeBnbUsdtPair;
 
     /// @notice An event that is emitted when some tokens are bought
-    event Sold(uint256 boughtAmount, uint256 dateBought, address buyingAddress, address receivingAddress, uint8 level);
+    event Sold(uint256 boughtAmount, uint256 dateBought, address buyingAddress, address receivingAddress, address referrerAddress, uint8 level);
 
     /// @notice An event that is emitted when sale funds are collected
     event SaleCollected(uint256 collectedAmount);
@@ -126,20 +165,26 @@ contract PolarfoxTokenSale is Ownable {
 
     // Buys tokens in the sale - recipient receives the tokens
     function buyTokens(address recipient) public payable {
+        buyTokens(recipient, address(0));
+    }
+
+    // Buys tokens in the sale - recipient receives the tokens
+    function buyTokens(address recipient, address referrer) public payable {
         // Convert the amount from BNB to USD
         uint256 amountUsd = msg.value * currentBnbPrice;
 
-        _buyTokens(recipient, amountUsd);
+        _buyTokens(recipient, referrer, amountUsd);
     }
 
     // Private methods
 
     // Mechanism for buying tokens in the sale
-    function _buyTokens(address recipient, uint256 amountUsd) private {
+    function _buyTokens(address recipient, address referrer, uint256 amountUsd) private {
         // Safety checks
         require(amountUsd > 0, 'Cannot buy 0 PFX tokens');
         require(isSellActive, 'Sale has not started or is finished');
         require(currentLevel < numberOfLevels, 'No PFX to sell after level 120');
+        require(recipient != referrer, 'Recipient cannot be referrer');
 
         // Add the buyer to the list of buyers if needed
         if (!hasBought[recipient]) {
@@ -168,10 +213,15 @@ contract PolarfoxTokenSale is Ownable {
         // Increase the total sold USD amount
         currentSoldAmountUsd += amountUsdCurrentLevel;
 
-        // Append the transaction to the list of transactions
-        transactions.push(TransactionData(amountUsdCurrentLevel, block.timestamp, msg.sender, recipient, currentLevel));
+        // Create the transaction
+        TransactionData memory transaction = TransactionData(amountUsdCurrentLevel, block.timestamp, msg.sender, recipient, referrer, currentLevel);
 
-        emit Sold(amountUsdCurrentLevel, block.timestamp, msg.sender, recipient, currentLevel);
+        // Append the transaction to the lists of transactions
+        transactions.push(transaction);
+        transactionsForReceivingAddress[recipient].push(transaction);
+        transactionsForReferralAddress[referrer].push(transaction);
+
+        emit Sold(amountUsdCurrentLevel, block.timestamp, msg.sender, recipient, referrer, currentLevel);
 
         // If there is not enough room in the current level
         if (amountUsdNextLevel > 0) {
@@ -179,7 +229,7 @@ contract PolarfoxTokenSale is Ownable {
             increaseLevel();
 
             // Buy tokens at the next level
-            _buyTokens(recipient, amountUsdNextLevel);
+            _buyTokens(recipient, referrer, amountUsdNextLevel);
         }
     }
 
