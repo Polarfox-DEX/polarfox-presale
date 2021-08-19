@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.7;
 
-// To do list
-// #6: Gas fees optimizations - some uint256s can be reduced to uint96s
-
 // PancakePair BNB/USDT on mainnet: 0x16b9a82891338f9bA80E2D6970FddA79D1eb0daE
 // PancakePair BNB/USDT on testnet: 0xF855E52ecc8b3b795Ac289f85F6Fd7A99883492b
 
