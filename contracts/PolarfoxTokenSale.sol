@@ -57,7 +57,7 @@ contract PolarfoxTokenSale is Ownable {
     uint8 public currentLevel;
 
     /// @notice Total number of levels in the sale
-    uint8 public constant numberOfLevels = 120;
+    uint8 public constant NUMBER_OF_LEVELS = 120;
 
     /// @notice Current sold amount (in USD). When this reaches the batch size or the current level, the sale
     /// moves on to the next level
@@ -65,7 +65,7 @@ contract PolarfoxTokenSale is Ownable {
 
     /// @notice Levels of the sale. When one level is done, the sale moves on to the next.
     /// Each number in this array represents the total amount of PFX that can be bought in the sale (in USD)
-    uint256[numberOfLevels] public batchSizes = [
+    uint256[NUMBER_OF_LEVELS] public batchSizes = [
         100000000000000000000000, 100000000000000000000000, 100000000000000000000000, 100000000000000000000000, 100000000000000000000000, // Levels 00 to 04
         100000000000000000000000, 100000000000000000000000, 100000000000000000000000, 100000000000000000000000, 100000000000000000000000, // Levels 05 to 09
         100000000000000000000000, 100000000000000000000000, 100000000000000000000000, 100000000000000000000000, 100000000000000000000000, // Levels 10 to 14
@@ -93,7 +93,7 @@ contract PolarfoxTokenSale is Ownable {
     ];
 
     // Test values:
-    // uint256[numberOfLevels] public batchSizes = [
+    // uint256[NUMBER_OF_LEVELS] public batchSizes = [
     //     1000, 100, 200, 300, 400, // Levels 00 to 04
     //     1000, 100, 200, 300, 400, // Levels 05 to 09
     //     1000, 100, 200, 300, 400, // Levels 10 to 14
@@ -134,7 +134,10 @@ contract PolarfoxTokenSale is Ownable {
 
     /// @notice An event that is emitted when the sale is stopped
     event SaleStopped();
-
+    
+    /// @notice An event that is emitted when the level is changed
+    event LevelChanged(uint8 oldLevel, uint8 newLevel);
+    
     constructor(address payable sellRecipient_, address _pancakeBnbUsdtPair) {
         sellRecipient = sellRecipient_;
         pancakeBnbUsdtPair = IPancakePair(_pancakeBnbUsdtPair);
@@ -178,10 +181,10 @@ contract PolarfoxTokenSale is Ownable {
     // Mechanism for buying tokens in the sale
     function _buyTokens(address recipient, address referrer, uint256 amountUsd) private {
         // Safety checks
-        require(amountUsd > 0, 'Cannot buy 0 PFX tokens');
-        require(isSellActive, 'Sale has not started or is finished');
-        require(currentLevel < numberOfLevels, 'No PFX to sell after level 120');
-        require(recipient != referrer, 'Recipient cannot be referrer');
+        require(amountUsd > 0, 'PolarfoxTokenSale::_buyTokens: Cannot buy 0 PFX tokens');
+        require(isSellActive, 'PolarfoxTokenSale::_buyTokens: Sale has not started or is finished');
+        require(currentLevel < NUMBER_OF_LEVELS, 'PolarfoxTokenSale::_buyTokens: No PFX to sell after level 120');
+        require(recipient != referrer, 'PolarfoxTokenSale::_buyTokens: Recipient cannot be referrer');
 
         // Add the buyer to the list of buyers if needed
         if (!hasBought[recipient]) {
@@ -240,7 +243,10 @@ contract PolarfoxTokenSale is Ownable {
         // Recalculate the USD price of BNB
         updateCurrentBnbPrice();
 
-        if (currentLevel >= numberOfLevels) stopSale();
+        if (currentLevel >= NUMBER_OF_LEVELS) stopSale();
+
+        // Emit an event
+        emit LevelChanged(currentLevel - 1, currentLevel);
     }
 
     // Updates the price of BNB using the BNB/USDT pool on PancakeSwap 
@@ -256,7 +262,7 @@ contract PolarfoxTokenSale is Ownable {
 
     // Collects the sale funds. Only callable by the owner
     function collectSale() public onlyOwner {
-        require(address(this).balance > 0, 'Nothing to collect');
+        require(address(this).balance > 0, 'PolarfoxTokenSale::collectSale: Nothing to collect');
 
         emit SaleCollected(address(this).balance);
 
