@@ -7,6 +7,8 @@ pragma solidity 0.8.7;
 // Rewrite comments in the style of PTS
 // Events
 
+// TODO: This contract should be excluded from the PFX fees (same for InitialAirdrop).
+
 import './libraries/Ownable.sol';
 import './interfaces/IPFX.sol';
 
@@ -16,6 +18,8 @@ import './interfaces/IPFX.sol';
 contract VestedAirdrop is Ownable {
     /// @notice Total number of levels in the airdrop
     uint8 public constant NUMBER_OF_LEVELS = 120;
+
+    address public pfx;
 
     bool isActive;
     bool[NUMBER_OF_LEVELS] public isInitialized;
@@ -29,9 +33,12 @@ contract VestedAirdrop is Ownable {
     mapping(address => uint256)[NUMBER_OF_LEVELS] amountPerAddress; // TODO: Initialize this
 
     // Remaining amount per address
-    mapping(address => uint256)[NUMBER_OF_LEVELS] remainingAmountPerAddress; // TODO: Initialize this
+    mapping(address => uint256)[NUMBER_OF_LEVELS] claimedAmountPerAddress; // TODO: Initialize this
 
-    constructor() {
+    constructor(address _pfx) {
+        // Set the PFX address
+        pfx = _pfx;
+
         // Mark the airdrop as inactive
         isActive = false;
 
@@ -45,15 +52,42 @@ contract VestedAirdrop is Ownable {
 
     // Public methods
 
-    // ...
+    function claim(uint8 level) public {
+        // Safety checks
+        require(block.timestamp >= vestingStarts[level], 'VestedAirdrop::claim: vesting has not started for this level');
+
+        // Calculate the amount of PFX to send
+        uint256 amount;
+        if (block.timestamp >= vestingEnds[level]) {
+            // The vesting has ended: send all the remaining PFX for that address
+            amount = amountPerAddress[level][msg.sender] - claimedAmountPerAddress[level][msg.sender];
+
+            // Set the claimed amount to the maximum
+            claimedAmountPerAddress[level][msg.sender] = amountPerAddress[level][msg.sender];
+        } else {
+            // The vesting is ongoing: calculate how much PFX that address is entitled to
+            uint256 entitledAmount = (amountPerAddress[level][msg.sender] * (block.timestamp - vestingStarts[level])) /
+                (vestingEnds[level] - vestingStarts[level]);
+
+            // Remove the amount that was already sent for this address
+            amount = entitledAmount - claimedAmountPerAddress[level][msg.sender];
+
+            // Do not send 0 PFX
+            require(amount > 0, 'VestedAirdrop::claim: no PFX to send right now');
+
+            // Store the amount that was retrieved in the database
+            claimedAmountPerAddress[level][msg.sender] += amount;
+        }
+
+        // Send the PFX
+        IPFX(pfx).transfer(msg.sender, amount);
+    }
 
     // Private methods
 
     // ...
 
     // Owner methods
-
-    // ...
 
     function startVestedAirdrop() public onlyOwner {
         // Safety checks
@@ -83,7 +117,6 @@ contract VestedAirdrop is Ownable {
         // Initialize values
         for (uint256 i = 0; i < addresses.length; i++) {
             amountPerAddress[level][addresses[i]] = amounts[i];
-            remainingAmountPerAddress[level][addresses[i]] = amounts[i];
         }
 
         // Mark this level as initialized
