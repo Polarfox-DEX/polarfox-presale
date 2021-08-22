@@ -22,18 +22,78 @@ contract VestedAirdrop is Ownable {
     address public pfx;
 
     bool isActive;
+    bool isPaused;
     bool[NUMBER_OF_LEVELS] public isInitialized;
 
     uint256 public currentDistributedAmount;
 
-    uint256[NUMBER_OF_LEVELS] public vestingStarts = [];
-    uint256[NUMBER_OF_LEVELS] public vestingEnds = [];
+    // uint256[NUMBER_OF_LEVELS] public vestingStarts = [];
+    // uint256[NUMBER_OF_LEVELS] public vestingEnds = [];
+
+    // Test values:
+    uint256[NUMBER_OF_LEVELS] public vestingStarts = [
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 00 to 04
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 05 to 09
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 10 to 14
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 15 to 19
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 20 to 24
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 25 to 29
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 30 to 34
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 35 to 39
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 40 to 44
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 45 to 49
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 50 to 54
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 55 to 59
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 60 to 64
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 65 to 69
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 70 to 74
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 75 to 79
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 80 to 84
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 85 to 89
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 90 to 94
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 95 to 99
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 100 to 104
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 105 to 109
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036, // Levels 110 to 114
+        1629618036, 1629617036, 1629616036, 1629615636, 1629615036 // Levels 115 to 119
+    ];
+
+    uint256[NUMBER_OF_LEVELS] public vestingEnds = [
+        1629619036, 1629618036, 1629617036, 1629616036, 1629615636, // Levels 00 to 04
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 05 to 09
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 10 to 14
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 15 to 19
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 20 to 24
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 25 to 29
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 30 to 34
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 35 to 39
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 40 to 44
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 45 to 49
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 50 to 54
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 55 to 59
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 60 to 64
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 65 to 69
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 70 to 74
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 75 to 79
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 80 to 84
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 85 to 89
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 90 to 94
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 95 to 99
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 100 to 104
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 105 to 109
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636, // Levels 110 to 114
+        1629619036, 1629618036, 1629617036, 1629616636, 1629615636 // Levels 115 to 119
+    ];
+
+    // Required for initialization - we want to be sure we do not start the airdrop with less PFX than we actually need
+    uint256 public totalAllLevels;
+    uint256[NUMBER_OF_LEVELS] public totalAmounts;
 
     // 120 mappings, one per level, each one detailing how much should be given to each address
-    mapping(address => uint256)[NUMBER_OF_LEVELS] amountPerAddress; // TODO: Initialize this
+    mapping(address => uint256)[NUMBER_OF_LEVELS] amountPerAddress;
 
     // Remaining amount per address
-    mapping(address => uint256)[NUMBER_OF_LEVELS] claimedAmountPerAddress; // TODO: Initialize this
+    mapping(address => uint256)[NUMBER_OF_LEVELS] claimedAmountPerAddress;
 
     constructor(address _pfx) {
         // Set the PFX address
@@ -41,6 +101,8 @@ contract VestedAirdrop is Ownable {
 
         // Mark the airdrop as inactive
         isActive = false;
+        isPaused = false;
+        totalAllLevels = 0;
 
         // The current distributed amount starts at 0
         currentDistributedAmount = 0;
@@ -54,7 +116,9 @@ contract VestedAirdrop is Ownable {
 
     function claim(uint8 level) public {
         // Safety checks
-        require(block.timestamp >= vestingStarts[level], 'VestedAirdrop::claim: vesting has not started for this level');
+        require(isActive, 'VestedAirdrop::claim: Vesting is not active');
+        require(isPaused, 'VestedAirdrop::claim: Vesting is paused');
+        require(block.timestamp >= vestingStarts[level], 'VestedAirdrop::claim: Vesting has not started for this level');
 
         // Calculate the amount of PFX to send
         uint256 amount;
@@ -73,7 +137,7 @@ contract VestedAirdrop is Ownable {
             amount = entitledAmount - claimedAmountPerAddress[level][msg.sender];
 
             // Do not send 0 PFX
-            require(amount > 0, 'VestedAirdrop::claim: no PFX to send right now');
+            require(amount > 0, 'VestedAirdrop::claim: No PFX to send right now');
 
             // Store the amount that was retrieved in the database
             claimedAmountPerAddress[level][msg.sender] += amount;
@@ -83,27 +147,41 @@ contract VestedAirdrop is Ownable {
         IPFX(pfx).transfer(msg.sender, amount);
     }
 
-    // Private methods
-
-    // ...
-
     // Owner methods
 
     function startVestedAirdrop() public onlyOwner {
         // Safety checks
-        require(!isActive, 'VestedAirdrop::startVestedAirdrop: airdrop already started');
+        require(!isActive, 'VestedAirdrop::startVestedAirdrop: Airdrop already started');
 
         for (uint256 i = 0; i < NUMBER_OF_LEVELS; i++) {
-            require(isInitialized[i], 'VestedAirdrop::startVestedAirdrop: one level or more are not initialized');
+            require(isInitialized[i], 'VestedAirdrop::startVestedAirdrop: One level or more are not initialized');
         }
 
-        // TODO: Make sure we have enough bank to start
+        // Make sure we have enough PFX to start
+        require(IPFX(pfx).balanceOf(address(this)) >= totalAllLevels, 'VestedAirdrop::startVestedAirdrop: PFX balance is too low to start');
 
         // Start the airdrop
         isActive = true;
     }
 
-    function endVestedAirdrop() public onlyOwner {}
+    function endVestedAirdrop() public onlyOwner {
+        // Safety checks
+        require(isActive, 'VestedAirdrop::endVestedAirdrop: The presale has not started yet');
+
+        // Burn the remaining PFX
+        require(IPFX(pfx).transfer(address(0), IPFX(pfx).balanceOf(address(this))), 'VestedAirdrop::endVestedAirdrop: Burn failed');
+
+        // End the presale
+        isActive = false;
+    }
+
+    function pauseVestedAirdrop() public onlyOwner {
+        isPaused = true;
+    }
+
+    function resumeVestedAirdrop() public onlyOwner {
+        isPaused = false;
+    }
 
     function setAddressesForLevel(
         address[] memory addresses,
@@ -111,15 +189,22 @@ contract VestedAirdrop is Ownable {
         uint8 level
     ) public onlyOwner {
         // Safety checks
-        require(addresses.length == amounts.length, "VestedAirdrop::setAddressesForLevel: arrays' lengths do not match");
-        require(!isActive, 'VestedAirdrop::setAddressesForLevel: airdrop has started');
+        require(addresses.length == amounts.length, "VestedAirdrop::setAddressesForLevel: Arrays' lengths do not match");
+        require(!isActive, 'VestedAirdrop::setAddressesForLevel: Airdrop has started');
+
+        uint256 total = 0;
 
         // Initialize values
         for (uint256 i = 0; i < addresses.length; i++) {
             amountPerAddress[level][addresses[i]] = amounts[i];
+            total += amounts[i];
         }
 
         // Mark this level as initialized
         isInitialized[level] = true;
+
+        // Store the total
+        totalAmounts[level] = total;
+        totalAllLevels += total;
     }
 }
