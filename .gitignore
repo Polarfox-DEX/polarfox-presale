@@ -4,3 +4,4 @@ transactions.json
 bin/
 artifacts/
 cache/
+flatten/

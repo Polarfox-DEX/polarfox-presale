@@ -1,33 +1,46 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.7;
 
-// To do list:
-// Proper introductory comment
-// Update values
-// Rewrite comments in the style of PTS
-// Events
-
-// TODO: This contract should be excluded from the PFX fees (same for InitialAirdrop).
-
 import './libraries/Ownable.sol';
 import './interfaces/IPFX.sol';
 
 /**
- * Introductory comment goes here
+ * The Vested Airdrop contract 🦊
+ * This contract's job is to distribute PFX over time to participants in the PFX presale.
+ *
+ * Every level of the presale will see different rules applied to the distribution of their investment.
+ * Each one will have a custom:
+ * - percentage of tokens locked
+ * - start of vesting
+ * - end of vesting
+ *
+ * This is done, among other things, to lower sell pressure on the PFX token at launch, while remaining
+ * fair to investors.
  */
 contract VestedAirdrop is Ownable {
     /// @notice Total number of levels in the airdrop
     uint8 public constant NUMBER_OF_LEVELS = 120;
 
+    /// @notice Address of the PFX token
     address public pfx;
 
+    /// @notice Whether or not the sale is active
     bool isActive;
+
+    /// @notice Whether or not the sale is paused. This is here for safety purposes
     bool isPaused;
+
+    /// @notice Whether or not a level has been initialized.
+    /// This is only used when setting up the contract
     bool[NUMBER_OF_LEVELS] public isInitialized;
 
+    /// @notice The current amount of PFX that was distributed by this contract
     uint256 public currentDistributedAmount;
 
+    /// @notice The dates at which vesting starts for each level
     // uint256[NUMBER_OF_LEVELS] public vestingStarts = [];
+
+    /// @notice The dates at which vesting ends for each level
     // uint256[NUMBER_OF_LEVELS] public vestingEnds = [];
 
     // Test values:
@@ -85,15 +98,39 @@ contract VestedAirdrop is Ownable {
         1629619036, 1629618036, 1629617036, 1629616636, 1629615636 // Levels 115 to 119
     ];
 
-    // Required for initialization - we want to be sure we do not start the airdrop with less PFX than we actually need
+    /// @notice The total amount of PFX to be distributed among all levels.
+    /// This is only used when setting up the contract
     uint256 public totalAllLevels;
+
+    /// @notice The total amount of PFX to be distributed among one level.
+    /// This is only used when setting up the contract
     uint256[NUMBER_OF_LEVELS] public totalAmounts;
 
-    // 120 mappings, one per level, each one detailing how much should be given to each address
+    /// @notice A collection of 120 mappings, one per level, each one detailing how much PFX
+    /// should be given to each address
     mapping(address => uint256)[NUMBER_OF_LEVELS] amountPerAddress;
 
-    // Remaining amount per address
+    /// @notice Same as the mapping above, but instead highlights how much PFX each address
+    /// already claimed
     mapping(address => uint256)[NUMBER_OF_LEVELS] claimedAmountPerAddress;
+
+    /// @notice An event that is emitted when 
+    event ClaimedPfx(uint256 amount, address recipient, uint8 level);
+
+    /// @notice An event that is emitted when 
+    event StartedVestedAirdrop();
+
+    /// @notice An event that is emitted when 
+    event EndedVestedAirdrop();
+
+    /// @notice An event that is emitted when 
+    event PausedVestedAirdrop();
+
+    /// @notice An event that is emitted when 
+    event ResumedVestedAirdrop();
+
+    /// @notice An event that is emitted when 
+    event SetAddressesForLevel(address[] addresses, uint256[] amounts, uint8 level);
 
     constructor(address _pfx) {
         // Set the PFX address
@@ -114,10 +151,12 @@ contract VestedAirdrop is Ownable {
 
     // Public methods
 
+    // Allows a user to claim their earnings at a given level
+    // Dynamically calculates how much PFX an address is entitled to, and sends that amount
     function claim(uint8 level) public {
         // Safety checks
         require(isActive, 'VestedAirdrop::claim: Vesting is not active');
-        require(isPaused, 'VestedAirdrop::claim: Vesting is paused');
+        require(!isPaused, 'VestedAirdrop::claim: Vesting is paused');
         require(block.timestamp >= vestingStarts[level], 'VestedAirdrop::claim: Vesting has not started for this level');
 
         // Calculate the amount of PFX to send
@@ -145,10 +184,13 @@ contract VestedAirdrop is Ownable {
 
         // Send the PFX
         IPFX(pfx).transfer(msg.sender, amount);
+
+        emit ClaimedPfx(amount, msg.sender, level);
     }
 
     // Owner methods
 
+    // Starts the vested airdrop. Performs various safety checks
     function startVestedAirdrop() public onlyOwner {
         // Safety checks
         require(!isActive, 'VestedAirdrop::startVestedAirdrop: Airdrop already started');
@@ -162,8 +204,11 @@ contract VestedAirdrop is Ownable {
 
         // Start the airdrop
         isActive = true;
+
+        emit StartedVestedAirdrop();
     }
 
+    // Ends the vested airdrop, and burns what has not been distributed
     function endVestedAirdrop() public onlyOwner {
         // Safety checks
         require(isActive, 'VestedAirdrop::endVestedAirdrop: The presale has not started yet');
@@ -173,16 +218,26 @@ contract VestedAirdrop is Ownable {
 
         // End the presale
         isActive = false;
+
+        emit EndedVestedAirdrop();
     }
 
+    // Pauses the vested airdrop. In theory, this should not have to be used
     function pauseVestedAirdrop() public onlyOwner {
         isPaused = true;
+
+        emit PausedVestedAirdrop();
     }
 
+    // Unpauses the vested airdrop
     function resumeVestedAirdrop() public onlyOwner {
         isPaused = false;
+
+        emit ResumedVestedAirdrop();
     }
 
+    // Main setup function. This allows the owner to tell the contract the amounts of PFX each address
+    // is entitled to, for each level
     function setAddressesForLevel(
         address[] memory addresses,
         uint256[] memory amounts,
@@ -204,7 +259,9 @@ contract VestedAirdrop is Ownable {
         isInitialized[level] = true;
 
         // Store the total
+        totalAllLevels += total - totalAmounts[level]; // Remove the old total amount that was calculated for this level
         totalAmounts[level] = total;
-        totalAllLevels += total;
+
+        emit SetAddressesForLevel(addresses, amounts, level);
     }
 }

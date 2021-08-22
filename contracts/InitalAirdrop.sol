@@ -6,6 +6,7 @@ pragma solidity 0.8.7;
 // Update values
 // Rewrite comments in the style of PTS
 // Events
+// Exclude from fees
 
 import './libraries/Ownable.sol';
 import './interfaces/IPFX.sol';
