@@ -185,6 +185,7 @@ contract PolarfoxTokenSale is Ownable {
         require(isSellActive, 'PolarfoxTokenSale::_buyTokens: Sale has not started or is finished');
         require(currentLevel < NUMBER_OF_LEVELS, 'PolarfoxTokenSale::_buyTokens: No PFX to sell after level 120');
         require(recipient != referrer, 'PolarfoxTokenSale::_buyTokens: Recipient cannot be referrer');
+        require(tx.origin == msg.sender, 'PolarfoxTokenSale::_buyTokens: Caller cannot be a contract');
 
         // Add the buyer to the list of buyers if needed
         if (!hasBought[recipient]) {
