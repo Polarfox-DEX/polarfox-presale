@@ -158,7 +158,10 @@ contract VestedAirdrop is Ownable {
         require(isActive, 'VestedAirdrop::claim: Vesting is not active');
         require(!isPaused, 'VestedAirdrop::claim: Vesting is paused');
         require(block.timestamp >= vestingStarts[level], 'VestedAirdrop::claim: Vesting has not started for this level');
-        require(claimedAmountPerAddress[level][msg.sender] > 0, 'VestedAirdrop::claim: There is no PFX to claim for this address');
+        require(
+            amountPerAddress[level][msg.sender] - claimedAmountPerAddress[level][msg.sender] > 0,
+            'VestedAirdrop::claim: There is no PFX to claim for this address'
+        );
 
         // Calculate the amount of PFX to send
         uint256 amount;
