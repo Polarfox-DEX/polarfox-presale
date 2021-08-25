@@ -28,8 +28,8 @@ async function main() {
     const array = Array.from(apa.data)
     for (var i = 0; i < array.length; i++) {
         await vestedAirdrop.setAddressesForLevel(
-            array[i].amountsPerAddresses.map((obj) => obj.address), // address[] memory addresses
-            array[i].amountsPerAddresses.map((obj) => obj.amount), // uint256[] memory amounts
+            array[i].amountsPerAddresses.map((element) => element.address), // address[] memory addresses
+            array[i].amountsPerAddresses.map((element) => element.amount), // uint256[] memory amounts
             array[i].level // uint8 level
         )
 
@@ -49,7 +49,7 @@ main()
 const safetyChecks = (data) => {
     // Safety check #1: levels should only appear once, start at 0 and end at 119
     // Isolate the levels
-    const levels = data.map((obj) => obj.level).sort((a, b) => a - b)
+    const levels = data.map((element) => element.level).sort((a, b) => a - b)
 
     for (var i = 0; i < NUMBER_OF_LEVELS; i++) {
         if (levels[i] != i) {
@@ -61,13 +61,13 @@ const safetyChecks = (data) => {
     // Safety check #2: an address should not appear twice in one level
     // For each level
     var error = false
-    data.forEach((obj) => {
+    data.forEach((element) => {
         // See if there is a duplicate in the addresses
-        const addresses = obj.amountsPerAddresses.map((obj_) => obj_.address)
+        const addresses = element.amountsPerAddresses.map((element_) => element_.address)
         const uniqueAddresses = Array.from(new Set(addresses))
 
         if (addresses.length != uniqueAddresses.length) {
-            console.error(`Some addresses in level ${obj.level} appear multiple times`)
+            console.error(`Some addresses in level ${element.level} appear multiple times`)
             error = true
         }
     })

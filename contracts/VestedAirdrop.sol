@@ -114,22 +114,22 @@ contract VestedAirdrop is Ownable {
     /// already claimed
     mapping(address => uint256)[NUMBER_OF_LEVELS] public claimedAmountPerAddress;
 
-    /// @notice An event that is emitted when 
+    /// @notice An event that is emitted when some PFX is claimed
     event ClaimedPfx(uint256 amount, address recipient, uint8 level);
 
-    /// @notice An event that is emitted when 
+    /// @notice An event that is emitted when the vested airdrop starts
     event StartedVestedAirdrop();
 
-    /// @notice An event that is emitted when 
+    /// @notice An event that is emitted when the vested airdrop ends
     event EndedVestedAirdrop();
 
-    /// @notice An event that is emitted when 
+    /// @notice An event that is emitted when the vested airdrop is paused
     event PausedVestedAirdrop();
 
-    /// @notice An event that is emitted when 
+    /// @notice An event that is emitted when the vested airdrop is unpaused
     event ResumedVestedAirdrop();
 
-    /// @notice An event that is emitted when 
+    /// @notice An event that is emitted when addresses are set for a level
     event SetAddressesForLevel(address[] addresses, uint256[] amounts, uint8 level);
 
     constructor(address _pfx) {

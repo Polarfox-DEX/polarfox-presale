@@ -1,33 +1,38 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.7;
 
-// To do list:
-// Proper introductory comment
-// Update values
-// Rewrite comments in the style of PTS
-// Events
-// Exclude from fees
-
 import './libraries/Ownable.sol';
 import './interfaces/IPFX.sol';
 
 /**
- * Introductory comment goes here
+ * The Initial Airdrop contract 🦊
+ * This contract will distribute a part of the PFX bought in the presale, immediately after it is done.
+ *
+ * Not all tokens will be distributed using this contract - this is done to reduce immediate sell pressure.
  */
-contract InitialAidrop is Ownable {
-    uint256 public constant TOTAL_AIRDROP_SUPPLY = 1_000_000e18; // Exact amount TBD
-    address public pfx; // PFX address
+contract InitialAirdrop is Ownable {
+    /// @notice The total amount of PFX to distribute
+    uint256 public constant TOTAL_AIRDROP_SUPPLY = 1_000e18; // TODO: Exact amount TBD
 
-    // Variables
-    bool public claimingAllowed; // True if claiming is allowed
+    /// @notice The PFX token address
+    address public pfx;
 
-    // PFX amounts
-    mapping(address => uint96) public withdrawAmount; // Amount of PFX to transfer
-    uint256 public totalAllocated; // Total number of PFX tokens in the withdrawAmount mapping
+    /// @notice True if claiming is allowed, false otherwise
+    bool public claimingAllowed;
 
-    // Events
+    /// @notice The amount of PFX that is claimable, per address
+    mapping(address => uint96) public withdrawAmount;
+
+    /// @notice The total amount of PFX tokens om the withdrawAmount mapping
+    uint256 public totalAllocated;
+
+    /// @notice An event that is emitted when claiming starts
     event ClaimingAllowed();
+
+    /// @notice An event that is emitted when claiming ends
     event ClaimingOver();
+
+    /// @notice An event that is emitted when some PFX is claimed by an address
     event PfxClaimed(address claimer, uint256 amount);
 
     /**

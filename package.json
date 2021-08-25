@@ -7,6 +7,7 @@
     "flatten": "waffle flatten .waffle.json",
     "compile": "hardhat compile",
     "postcompile": "yarn flatten",
+    "deploy-ia:fuji": "hardhat run scripts/initial-airdrop/deploy.js --network fuji",
     "deploy-va:fuji": "hardhat run scripts/vested-airdrop/deploy.js --network fuji"
   },
   "devDependencies": {
