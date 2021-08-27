@@ -4,12 +4,16 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "compile": "waffle .waffle.json"
+    "clean": "hardhat clean",
+    "flatten": "waffle flatten .waffle.json",
+    "compile": "hardhat compile",
+    "postcompile": "yarn flatten"
   },
   "devDependencies": {
     "@truffle/hdwallet-provider": "^1.4.0",
     "ethereum-waffle": "^3.3.0",
-    "solc": "^0.8.5",
+    "hardhat": "^2.6.0",
+    "solc": "^0.8.7",
     "web3": "^1.0.0-beta.35"
   }
 }

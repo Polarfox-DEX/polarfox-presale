@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.5;
+pragma solidity 0.8.7;
 
 // Contract for administering the Airdrop of PFX to the people who participated in the PFX pre-sale on Ethereum!
 contract Airdrop {

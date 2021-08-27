@@ -1,3 +1,7 @@
 node_modules
 build/*
 transactions.json
+bin/
+artifacts/
+cache/
+flatten/
