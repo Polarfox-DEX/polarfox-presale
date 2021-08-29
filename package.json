@@ -1,7 +1,7 @@
 {
   "name": "@polarfox/presale",
   "description": "Contracts for the Polarfox ICO",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/Polarfox-DEX/polarfox-presale"
