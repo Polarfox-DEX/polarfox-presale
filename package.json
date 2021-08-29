@@ -1,7 +1,17 @@
 {
-  "name": "polarfox-presale",
-  "version": "0.0.0",
+  "name": "@polarfox/presale",
+  "description": "Contracts for the Polarfox ICO",
+  "version": "1.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Polarfox-DEX/polarfox-presale"
+  },
+  "author": "Clément Aguilar <clem@polarfox.io>",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Polarfox-DEX/polarfox-presale/issues"
+  },
+  "homepage": "https://polarfox.io",
   "scripts": {
     "clean": "hardhat clean",
     "flatten": "waffle flatten .waffle.json",
