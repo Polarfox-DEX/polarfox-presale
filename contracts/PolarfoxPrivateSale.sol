@@ -34,7 +34,7 @@ contract PolarfoxPrivateSale is Ownable {
     address[] public buyers;
 
     /// @notice True if an address has bought tokens in the sale, false otherwise
-    mapping(address => bool) hasBought;
+    mapping(address => bool) public hasBought;
 
     /// @notice The list of transactions that occurred on the sale
     TransactionData[] public transactions;
