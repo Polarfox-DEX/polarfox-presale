@@ -28,13 +28,13 @@ struct TransactionData {
  */
 contract PolarfoxPrivateSale is Ownable {
     /// @notice The address that receives the money from the sale
-    address payable sellRecipient;
+    address payable public sellRecipient;
 
     /// @notice The addresses that participated in the sale
     address[] public buyers;
 
     /// @notice True if an address has bought tokens in the sale, false otherwise
-    mapping(address => bool) hasBought;
+    mapping(address => bool) public hasBought;
 
     /// @notice The list of transactions that occurred on the sale
     TransactionData[] public transactions;
