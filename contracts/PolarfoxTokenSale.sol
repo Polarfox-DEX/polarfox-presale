@@ -168,7 +168,6 @@ contract PolarfoxTokenSale is Ownable {
         return transactionsForReceivingAddress[_address].length;
     }
 
-
     // Buys tokens in the sale - msg.sender receives the tokens
     function buyTokens() public payable {
         buyTokens(msg.sender);
