@@ -28,7 +28,7 @@ struct TransactionData {
  */
 contract PolarfoxPrivateSale is Ownable {
     /// @notice The address that receives the money from the sale
-    address payable public sellRecipient;
+    address payable public saleRecipient;
 
     /// @notice The addresses that participated in the sale
     address[] public buyers;
@@ -75,9 +75,12 @@ contract PolarfoxPrivateSale is Ownable {
     /// @notice An event that is emitted when an address is blacklisted
     event BlacklistedAddress(address _address);
 
-    constructor(address payable sellRecipient_, uint256 currentBnbPrice_) {
+    /// @notice An event that is emitted when the sale recipient is changed
+    event ChangedSaleRecipient(address _address);
+
+    constructor(address payable saleRecipient_, uint256 currentBnbPrice_) {
         // Initialize values
-        sellRecipient = sellRecipient_;
+        saleRecipient = saleRecipient_;
         isSaleActive = false;
         soldAmount = 0;
         currentBnbPrice = currentBnbPrice_;
@@ -120,7 +123,7 @@ contract PolarfoxPrivateSale is Ownable {
         emit SaleCollected(address(this).balance);
 
         // Transfer the sale funds
-        sellRecipient.transfer(address(this).balance);
+        saleRecipient.transfer(address(this).balance);
     }
 
     // Private methods
@@ -185,5 +188,12 @@ contract PolarfoxPrivateSale is Ownable {
         isWhitelisted[_address] = false;
 
         emit BlacklistedAddress(_address);
+    }
+
+    // Sets a new sale recipient. Only callable by the owner
+    function setSaleRecipient(address payable _address) public onlyOwner {
+        saleRecipient = _address;
+
+        emit ChangedSaleRecipient(_address);
     }
 }
