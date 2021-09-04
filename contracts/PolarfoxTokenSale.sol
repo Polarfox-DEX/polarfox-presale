@@ -47,8 +47,8 @@ contract PolarfoxTokenSale is Ownable {
     /// @notice Returns the transactions for each referred address
     mapping(address => TransactionData[]) public transactionsForReferralAddress;
 
-    /// @notice True if the sell is active, false otherwise
-    bool public isSellActive;
+    /// @notice True if the sale is active, false otherwise
+    bool public isSaleActive;
 
     /// @notice Current BNB/USDT price. Recalculated after each level is finished
     uint256 public currentBnbPrice;
@@ -141,7 +141,7 @@ contract PolarfoxTokenSale is Ownable {
     constructor(address payable sellRecipient_, address _pancakeBnbUsdtPair) {
         sellRecipient = sellRecipient_;
         pancakeBnbUsdtPair = IPancakePair(_pancakeBnbUsdtPair);
-        isSellActive = false;
+        isSaleActive = false;
 
         // First level is 0
         currentLevel = 0;
@@ -193,7 +193,7 @@ contract PolarfoxTokenSale is Ownable {
     function _buyTokens(address recipient, address referrer, uint256 amountUsd) private {
         // Safety checks
         require(amountUsd > 0, 'PolarfoxTokenSale::_buyTokens: Cannot buy 0 PFX tokens');
-        require(isSellActive, 'PolarfoxTokenSale::_buyTokens: Sale has not started or is finished');
+        require(isSaleActive, 'PolarfoxTokenSale::_buyTokens: Sale has not started or is finished');
         require(currentLevel < NUMBER_OF_LEVELS, 'PolarfoxTokenSale::_buyTokens: No PFX to sell after level 120');
         require(recipient != referrer, 'PolarfoxTokenSale::_buyTokens: Recipient cannot be referrer');
         require(tx.origin == msg.sender, 'PolarfoxTokenSale::_buyTokens: Caller cannot be a contract');
@@ -284,14 +284,14 @@ contract PolarfoxTokenSale is Ownable {
 
     // Starts the sale. Only callable by the owner
     function startSale() public onlyOwner {
-        isSellActive = true;
+        isSaleActive = true;
 
         emit SaleStarted();
     }
 
     // Stops the sale. Only callable by the owner
     function stopSale() public onlyOwner {
-        isSellActive = false;
+        isSaleActive = false;
 
         emit SaleStopped();
     }

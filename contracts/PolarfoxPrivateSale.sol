@@ -42,7 +42,7 @@ contract PolarfoxPrivateSale is Ownable {
     /// @notice Returns the transactions for each receiving address
     mapping(address => TransactionData[]) public transactionsForReceivingAddress;
 
-    /// @notice True if the sell is active, false otherwise
+    /// @notice True if the sale is active, false otherwise
     bool public isSaleActive;
 
     /// @notice BNB/USDT price
