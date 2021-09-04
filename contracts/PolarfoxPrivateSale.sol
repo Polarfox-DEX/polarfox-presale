@@ -112,6 +112,16 @@ contract PolarfoxPrivateSale is Ownable {
 
         _buyTokens(recipient, amountUsd);
     }
+    
+    // Collects the sale funds
+    function collectSale() public {
+        require(address(this).balance > 0, 'PolarfoxPrivateSale::collectSale: Nothing to collect');
+
+        emit SaleCollected(address(this).balance);
+
+        // Transfer the sale funds
+        sellRecipient.transfer(address(this).balance);
+    }
 
     // Private methods
 
@@ -146,16 +156,6 @@ contract PolarfoxPrivateSale is Ownable {
     // Updates the price of BNB manually. Only callable by the owner
     function updateCurrentBnbPrice(uint256 currentBnbPrice_) public onlyOwner {
         currentBnbPrice = currentBnbPrice_;
-    }
-
-    // Collects the sale funds. Only callable by the owner
-    function collectSale() public onlyOwner {
-        require(address(this).balance > 0, 'PolarfoxPrivateSale::collectSale: Nothing to collect');
-
-        emit SaleCollected(address(this).balance);
-
-        // Transfer the sale funds
-        sellRecipient.transfer(address(this).balance);
     }
 
     // Starts the sale. Only callable by the owner

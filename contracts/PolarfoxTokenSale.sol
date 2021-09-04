@@ -187,6 +187,16 @@ contract PolarfoxTokenSale is Ownable {
         _buyTokens(recipient, referrer, amountUsd);
     }
 
+        // Collects the sale funds
+    function collectSale() public {
+        require(address(this).balance > 0, 'PolarfoxTokenSale::collectSale: Nothing to collect');
+
+        emit SaleCollected(address(this).balance);
+
+        // Transfer the sale funds
+        sellRecipient.transfer(address(this).balance);
+    }
+
     // Private methods
 
     // Mechanism for buying tokens in the sale
@@ -271,16 +281,6 @@ contract PolarfoxTokenSale is Ownable {
     }
 
     // Owner methods
-
-    // Collects the sale funds. Only callable by the owner
-    function collectSale() public onlyOwner {
-        require(address(this).balance > 0, 'PolarfoxTokenSale::collectSale: Nothing to collect');
-
-        emit SaleCollected(address(this).balance);
-
-        // Transfer the sale funds
-        sellRecipient.transfer(address(this).balance);
-    }
 
     // Starts the sale. Only callable by the owner
     function startSale() public onlyOwner {
