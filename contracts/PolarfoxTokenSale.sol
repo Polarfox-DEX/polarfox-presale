@@ -30,7 +30,7 @@ struct TransactionData {
  */
 contract PolarfoxTokenSale is Ownable {
     /// @notice The address that receives the money from the sale
-    address payable sellRecipient;
+    address payable public sellRecipient;
 
     /// @notice The addresses that participated in the sale
     address[] public buyers;
