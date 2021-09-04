@@ -43,7 +43,7 @@ contract PolarfoxPrivateSale is Ownable {
     mapping(address => TransactionData[]) public transactionsForReceivingAddress;
 
     /// @notice True if the sell is active, false otherwise
-    bool public isSellActive;
+    bool public isSaleActive;
 
     /// @notice BNB/USDT price
     uint256 public currentBnbPrice;
@@ -78,7 +78,7 @@ contract PolarfoxPrivateSale is Ownable {
     constructor(address payable sellRecipient_, uint256 currentBnbPrice_) {
         // Initialize values
         sellRecipient = sellRecipient_;
-        isSellActive = false;
+        isSaleActive = false;
         soldAmount = 0;
         currentBnbPrice = currentBnbPrice_;
     }
@@ -119,7 +119,7 @@ contract PolarfoxPrivateSale is Ownable {
     function _buyTokens(address recipient, uint256 amountUsd) private {
         // Safety checks
         require(amountUsd > 0, 'PolarfoxPrivateSale::_buyTokens: Cannot buy 0 PFX tokens');
-        require(isSellActive, 'PolarfoxPrivateSale::_buyTokens: Sale has not started or is finished');
+        require(isSaleActive, 'PolarfoxPrivateSale::_buyTokens: Sale has not started or is finished');
         require(amountUsd + soldAmount <= amountToSell, 'PolarfoxPrivateSale::_buyTokens: Only 1,000,000 PFX tokens to sell');
         require(isWhitelisted[msg.sender], 'PolarfoxPrivateSale::_buyTokens: Buying address is not whitelisted');
 
@@ -160,14 +160,14 @@ contract PolarfoxPrivateSale is Ownable {
 
     // Starts the sale. Only callable by the owner
     function startSale() public onlyOwner {
-        isSellActive = true;
+        isSaleActive = true;
 
         emit SaleStarted();
     }
 
     // Stops the sale. Only callable by the owner
     function stopSale() public onlyOwner {
-        isSellActive = false;
+        isSaleActive = false;
 
         emit SaleStopped();
     }
